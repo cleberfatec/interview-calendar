@@ -1,6 +1,6 @@
 insert into person (id, creation_date, name, status, type) values (1, '2022-07-12 20:00:00' , 'Carl', 'ACTIVE', 'CANDIDATE');
-insert into person (id, creation_date, name, status, type) values (2, '2019-07-12 20:00:00' , 'Davi', 'ACTIVE', 'INTERVIWER');
-insert into person (id, creation_date, name, status, type) values (3, '2019-07-12 20:00:00' , 'Ingrid', 'ACTIVE', 'INTERVIWER');
+insert into person (id, creation_date, name, status, type) values (2, '2019-07-12 20:00:00' , 'Davi', 'ACTIVE', 'INTERVIEWER');
+insert into person (id, creation_date, name, status, type) values (3, '2019-07-12 20:00:00' , 'Ingrid', 'ACTIVE', 'INTERVIEWER');
 
 
 
