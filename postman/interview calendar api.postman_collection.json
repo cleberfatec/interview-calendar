@@ -1,0 +1,158 @@
+{
+	"id": "efe75730-02b5-3369-ae64-55d4b60454b5",
+	"name": "interview calendar api",
+	"description": "",
+	"order": [
+		"c9e7a35f-591c-6227-aefc-ae0b26521563",
+		"d4cf61bd-85d6-b9e1-26cd-4772e91b06a0",
+		"76f343df-6139-8357-b66b-22241e75e872",
+		"08c4da81-9b3f-9206-3e46-0e0c7d5ac958",
+		"15a8e6bb-1a9e-83f5-bf4f-46c69d481c62"
+	],
+	"folders": [],
+	"folders_order": [],
+	"timestamp": 1657643584446,
+	"owner": 0,
+	"public": false,
+	"requests": [
+		{
+			"id": "08c4da81-9b3f-9206-3e46-0e0c7d5ac958",
+			"headers": "Content-Type: application/json\n",
+			"headerData": [
+				{
+					"key": "Content-Type",
+					"value": "application/json",
+					"description": "",
+					"enabled": true
+				}
+			],
+			"url": "localhost:8080/interview/slot",
+			"queryParams": [],
+			"preRequestScript": null,
+			"pathVariables": {},
+			"pathVariableData": [],
+			"method": "POST",
+			"data": [],
+			"dataMode": "raw",
+			"tests": null,
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1657680894884,
+			"name": "slot register",
+			"description": "",
+			"collectionId": "efe75730-02b5-3369-ae64-55d4b60454b5",
+			"responses": [],
+			"rawModeData": "{\n\t\"personId\": 2,\n\t\"initTime\": \"13:00\",\n\t\"endTime\": \"14:00\",\n\t\"slotDate\": \"2022-07-23\",\n\t\"repeat\": false,\n\t\"repeatEveryday\" : false,\n\t\"repeatEveryweek\" : false\n}\n"
+		},
+		{
+			"id": "15a8e6bb-1a9e-83f5-bf4f-46c69d481c62",
+			"headers": "Content-Type: application/json\n",
+			"headerData": [
+				{
+					"key": "Content-Type",
+					"value": "application/json",
+					"description": "",
+					"enabled": true
+				}
+			],
+			"url": "localhost:8080/interview",
+			"queryParams": [],
+			"preRequestScript": null,
+			"pathVariables": {},
+			"pathVariableData": [],
+			"method": "GET",
+			"data": [],
+			"dataMode": "raw",
+			"tests": null,
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1657679994551,
+			"name": "query possible interviews",
+			"description": "",
+			"collectionId": "efe75730-02b5-3369-ae64-55d4b60454b5",
+			"responses": [],
+			"rawModeData": "{\n\t\"personId\": 1,\n\t\"initTime\": \"12:00\",\n\t\"endTime\": \"13:00\",\n\t\"slotDate\": \"2022-07-22\",\n\t\"repeat\": false\n}"
+		},
+		{
+			"id": "76f343df-6139-8357-b66b-22241e75e872",
+			"headers": "Content-Type: application/json\n",
+			"headerData": [
+				{
+					"key": "Content-Type",
+					"value": "application/json",
+					"description": "",
+					"enabled": true
+				}
+			],
+			"url": "localhost:8080/interview/candidate",
+			"queryParams": [],
+			"preRequestScript": null,
+			"pathVariables": {},
+			"pathVariableData": [],
+			"method": "POST",
+			"data": [],
+			"dataMode": "raw",
+			"tests": null,
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1657650493416,
+			"name": "candidate register",
+			"description": "",
+			"collectionId": "efe75730-02b5-3369-ae64-55d4b60454b5",
+			"responses": [],
+			"rawModeData": "{\n\t\"id\": 1,\n\t\"name\": \"Ingrid\"\n}"
+		},
+		{
+			"id": "c9e7a35f-591c-6227-aefc-ae0b26521563",
+			"headers": "",
+			"headerData": [],
+			"url": "",
+			"queryParams": [],
+			"pathVariables": {},
+			"pathVariableData": [],
+			"preRequestScript": null,
+			"method": "GET",
+			"collectionId": "efe75730-02b5-3369-ae64-55d4b60454b5",
+			"data": null,
+			"dataMode": "params",
+			"name": "interview",
+			"description": "",
+			"descriptionFormat": "html",
+			"time": 1657643592050,
+			"version": 2,
+			"responses": [],
+			"tests": null,
+			"currentHelper": "normal",
+			"helperAttributes": {}
+		},
+		{
+			"id": "d4cf61bd-85d6-b9e1-26cd-4772e91b06a0",
+			"headers": "Content-Type: application/json\n",
+			"headerData": [
+				{
+					"key": "Content-Type",
+					"value": "application/json",
+					"description": "",
+					"enabled": true
+				}
+			],
+			"url": "localhost:8080/interview/interviewer",
+			"queryParams": [],
+			"preRequestScript": null,
+			"pathVariables": {},
+			"pathVariableData": [],
+			"method": "POST",
+			"data": [],
+			"dataMode": "raw",
+			"tests": null,
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1657648090098,
+			"name": "interviewer register",
+			"description": "",
+			"collectionId": "efe75730-02b5-3369-ae64-55d4b60454b5",
+			"responses": [],
+			"rawModeData": "{\n\t\"id\": 2,\n\t\"name\": \"Ingrid\"\n}"
+		}
+	]
+}
