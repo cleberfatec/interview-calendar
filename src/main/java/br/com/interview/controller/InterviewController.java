@@ -28,43 +28,64 @@ import br.com.interview.model.Person;
 import br.com.interview.model.Slot;
 import br.com.interview.model.Status;
 import br.com.interview.model.TypeEnum;
-import br.com.interview.repository.PersonRepository;
-import br.com.interview.repository.SlotRepository;
+import br.com.interview.service.PersonService;
+import br.com.interview.service.SlotService;
+import io.swagger.annotations.ApiOperation;
 
 @RestController
 @RequestMapping("/interview")
 public class InterviewController {
 
 	@Autowired
-	private PersonRepository personRepository;
+	PersonService personService;	
 	
 	@Autowired
-	private SlotRepository slotRepository;
+	SlotService slotService;
 	
 	@GetMapping
 	public ResponseEntity<?> queryPossibleInterviews() {
 		
-		List<Slot> listSlot = slotRepository.findAll();
+		List<Slot> listSlot = slotService.findAll();
 		
 		//TODO
-		/*
-		List<Slot> candidates = listSlot.stream()
-				.filter(s -> s.getPerson().getType() == TypeEnum.CANDIDATE)
-				//.filter(s -> LocalDate.now().isAfter(s.getInitDate()))
-				.collect(Collectors.toList());
-		List<Slot> interviewers = listSlot.stream().filter(s -> s.getPerson().getType() == TypeEnum.INTERVIEWER)
-				//.filter(s -> LocalDate.now().isAfter(s.getInitDate()))
-				.collect(Collectors.toList());
 		
-		*/
-		return ResponseEntity.ok().body(SlotDto.converter(listSlot));
+//		List<Slot> candidates = listSlot.stream()
+//				.filter(s -> s.getPerson().getType() == TypeEnum.CANDIDATE)
+//				//.filter(s -> LocalDate.now().isAfter(s.getInitDate()))
+//				.collect(Collectors.toList());
+//		List<Slot> interviewers = listSlot.stream().filter(s -> s.getPerson().getType() == TypeEnum.INTERVIEWER)
+//				//.filter(s -> LocalDate.now().isAfter(s.getInitDate()))
+//				.collect(Collectors.toList());
+//		
+//		Map<Slot, List<Slot>> mapCandidateIterview = new HashMap<>();
+//		
+//		candidates.stream().forEach(canditate -> {
+//			List<Slot> interviewersAvalilable = interviewers.stream()
+//					.filter(interviewer -> 
+//						(canditate.getInitTime().isAfter(interviewer.getInitTime())	&& canditate.getEndTime().isBefore(interviewer.getEndTime()))
+//						&& (canditate.getSlotDate().isEqual(interviewer.getSlotDate()) || canditate.getSlotDate().isAfter(interviewer.getSlotDate())))
+//					.collect(Collectors.toList());
+//			mapCandidateIterview.put(canditate, interviewersAvalilable);
+//			//	
+//
+//		});
+		
+		
+		
+		//candidates.stream().filter(candidate ->  candidate)
+			
+		return ResponseEntity.ok().body(new SlotDto().converter(listSlot));
 	}
 	
 	@PostMapping("/slot")
 	@Transactional
+	@ApiOperation(value = "Register slot by person",
+    			  notes = "Endpoint responsible for register the slot time. First it checks whether the person exist, otherwise it returns http 422",
+    			  response = SlotDto.class,
+    			  responseContainer = "SlotDto")
 	public ResponseEntity<SlotDto> registerSlot(@RequestBody @Valid SlotForm form, UriComponentsBuilder uriBuilder) {
 		
-		Optional<Person> personBd = personRepository.findById(form.getPersonId());
+		Optional<Person> personBd = personService.findById(form.getPersonId());
 		
 		if (personBd.isPresent()) {			
 			Slot slot = new Slot(personBd.get(), 
@@ -74,7 +95,7 @@ public class InterviewController {
 					form.getRepeat(), 
 					form.getRepeatEveryday(), 
 					form.getRepeatEveryweek());
-			slotRepository.save(slot);
+			slotService.save(slot);
 			
 			URI uri = uriBuilder.path("interview/slot/{id}").buildAndExpand(slot.getId()).toUri();
 
@@ -86,6 +107,10 @@ public class InterviewController {
 
 	@PostMapping("/interviewer")
 	@Transactional
+	@ApiOperation(value = "Register interviewer",
+	  notes = "Endpoint responsible for register the interviewer. First it checks whether the person exist, if not it is created and return http 201, otherwise, return http 200",
+	  response = PersonDto.class,
+	  responseContainer = "PersonDto")
 	public ResponseEntity<?> registerInterviewer(@RequestBody @Valid PersonForm form,
 			UriComponentsBuilder uriBuilder) {
 
@@ -94,18 +119,23 @@ public class InterviewController {
 
 	@PostMapping("/candidate")
 	@Transactional
+	@ApiOperation(value = "Register candidate",
+	  notes = "Endpoint responsible for register the candidate. First it checks whether the person exist, if not it is created and return http 201, otherwise, return http 200",
+	  response = PersonDto.class,
+	  responseContainer = "PersonDto")
 	public ResponseEntity<?> registerCandidate(@RequestBody @Valid PersonForm form,
 			UriComponentsBuilder uriBuilder) {
 
 		return register(form, TypeEnum.CANDIDATE, uriBuilder);
 	}
 
+	/* Centralize the person creation, differing only person's type */
 	private ResponseEntity<?> register(PersonForm form, TypeEnum typeEnum, UriComponentsBuilder uriBuilder) {
-		Optional<Person> personDb = personRepository.findById(form.getId());
+		Optional<Person> personDb = personService.findById(form.getId());
 		if (!personDb.isPresent()) {
 
 			Person person = new Person(form.getId(), form.getName(), typeEnum, LocalDateTime.now(), Status.ACTIVE);
-			personRepository.save(person);
+			personService.save(person);
 
 			URI uri = uriBuilder.path("interview/interviewer/{id}").buildAndExpand(person.getId()).toUri();
 
