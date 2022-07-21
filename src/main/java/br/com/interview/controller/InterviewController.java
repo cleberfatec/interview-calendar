@@ -2,14 +2,15 @@ package br.com.interview.controller;
 
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,93 +19,58 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import br.com.interview.controller.dto.CandidateDto;
+import br.com.interview.controller.dto.InterviewerDto;
 import br.com.interview.controller.dto.MessageDto;
 import br.com.interview.controller.dto.PersonDto;
-import br.com.interview.controller.dto.SlotDto;
-import br.com.interview.controller.dto.SlotErrorDto;
+import br.com.interview.controller.dto.PossibleInterviewsDto;
 import br.com.interview.controller.form.PersonForm;
-import br.com.interview.controller.form.SlotForm;
-import br.com.interview.model.Person;
-import br.com.interview.model.Slot;
+import br.com.interview.model.Candidate;
+import br.com.interview.model.Interviewer;
 import br.com.interview.model.Status;
-import br.com.interview.model.TypeEnum;
-import br.com.interview.service.PersonService;
-import br.com.interview.service.SlotService;
+import br.com.interview.service.CandidateService;
+import br.com.interview.service.InterviewerService;
 import io.swagger.annotations.ApiOperation;
 
 @RestController
 @RequestMapping("/interview")
 public class InterviewController {
 
-	@Autowired
-	PersonService personService;	
 	
 	@Autowired
-	SlotService slotService;
+	CandidateService candidateService;
+	
+	@Autowired
+	InterviewerService interviewerService;
 	
 	@GetMapping
 	public ResponseEntity<?> queryPossibleInterviews() {
 		
-		List<Slot> listSlot = slotService.findAll();
+		List<Candidate> listCandidate = candidateService.findAll();
+		List<Interviewer> listInterviewer = interviewerService.findAll();
 		
-		//TODO
+		PossibleInterviewsDto possibleInterviewsDto = PossibleInterviewsDto.builder().build();	
+		possibleInterviewsDto.setCandidateDtos(new ArrayList<>());
 		
-//		List<Slot> candidates = listSlot.stream()
-//				.filter(s -> s.getPerson().getType() == TypeEnum.CANDIDATE)
-//				//.filter(s -> LocalDate.now().isAfter(s.getInitDate()))
-//				.collect(Collectors.toList());
-//		List<Slot> interviewers = listSlot.stream().filter(s -> s.getPerson().getType() == TypeEnum.INTERVIEWER)
-//				//.filter(s -> LocalDate.now().isAfter(s.getInitDate()))
-//				.collect(Collectors.toList());
-//		
-//		Map<Slot, List<Slot>> mapCandidateIterview = new HashMap<>();
-//		
-//		candidates.stream().forEach(canditate -> {
-//			List<Slot> interviewersAvalilable = interviewers.stream()
-//					.filter(interviewer -> 
-//						(canditate.getInitTime().isAfter(interviewer.getInitTime())	&& canditate.getEndTime().isBefore(interviewer.getEndTime()))
-//						&& (canditate.getSlotDate().isEqual(interviewer.getSlotDate()) || canditate.getSlotDate().isAfter(interviewer.getSlotDate())))
-//					.collect(Collectors.toList());
-//			mapCandidateIterview.put(canditate, interviewersAvalilable);
-//			//	
-//
-//		});
-		
-		
-		
-		//candidates.stream().filter(candidate ->  candidate)
+		listCandidate.stream().forEach(ca -> {		
+			List<Interviewer> interviewer = listInterviewer.stream()
+				.filter(inter -> ca.getInitTime().isAfter(inter.getInitTime()) || ca.getInitTime().compareTo(inter.getInitTime()) == 0)
+				.filter(inter -> ca.getEndTime().isBefore(inter.getEndTime())|| ca.getEndTime().compareTo(inter.getEndTime()) == 0)
+				.filter(inter -> ca.getSlotDate().equals(inter.getSlotDate()))
+				.collect(Collectors.toList());
 			
-		return ResponseEntity.ok().body(new SlotDto().converter(listSlot));
+			if (!interviewer.isEmpty()) {
+				CandidateDto candidateDto = new CandidateDto(ca);
+				candidateDto.setInterviewers(InterviewerDto.converter(interviewer));	
+				possibleInterviewsDto.getCandidateDtos().add(candidateDto);
+			}
+			
+		});		
+				
+		
+		return ResponseEntity.ok().body(possibleInterviewsDto);
 	}
 	
-	@PostMapping("/slot")
-	@Transactional
-	@ApiOperation(value = "Register slot by person",
-    			  notes = "Endpoint responsible for register the slot time. First it checks whether the person exist, otherwise it returns http 422",
-    			  response = SlotDto.class,
-    			  responseContainer = "SlotDto")
-	public ResponseEntity<SlotDto> registerSlot(@RequestBody @Valid SlotForm form, UriComponentsBuilder uriBuilder) {
-		
-		Optional<Person> personBd = personService.findById(form.getPersonId());
-		
-		if (personBd.isPresent()) {			
-			Slot slot = new Slot(personBd.get(), 
-					form.getSlotDate(), 
-					form.getInitTime(), 
-					form.getEndTime(),
-					form.getRepeat(), 
-					form.getRepeatEveryday(), 
-					form.getRepeatEveryweek());
-			slotService.save(slot);
-			
-			URI uri = uriBuilder.path("interview/slot/{id}").buildAndExpand(slot.getId()).toUri();
-
-			return ResponseEntity.created(uri).body(new SlotDto(slot));
-		}
-		
-		return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new SlotErrorDto(form.getPersonId(), "Person not registered in database"));
-	}
-
 	@PostMapping("/interviewer")
 	@Transactional
 	@ApiOperation(value = "Register interviewer",
@@ -114,7 +80,18 @@ public class InterviewController {
 	public ResponseEntity<?> registerInterviewer(@RequestBody @Valid PersonForm form,
 			UriComponentsBuilder uriBuilder) {
 
-		return register(form, TypeEnum.INTERVIEWER, uriBuilder);
+		Optional<Interviewer> personDb = interviewerService.findById(form.getId());
+		if (!personDb.isPresent()) {
+
+			Interviewer person = new Interviewer(form.getId(), form.getName(), LocalDateTime.now(), form.getSlotDate(), form.getInitTime(), form.getEndTime(), Status.ACTIVE);
+			interviewerService.save(person);
+
+			URI uri = uriBuilder.path("interview/interviewer/{id}").buildAndExpand(person.getId()).toUri();
+
+			return ResponseEntity.created(uri).body(new PersonDto(person));
+		}
+		return ResponseEntity.ok().body(new MessageDto("Person already register with id: " + form.getId()));
+		
 	}
 
 	@PostMapping("/candidate")
@@ -126,18 +103,13 @@ public class InterviewController {
 	public ResponseEntity<?> registerCandidate(@RequestBody @Valid PersonForm form,
 			UriComponentsBuilder uriBuilder) {
 
-		return register(form, TypeEnum.CANDIDATE, uriBuilder);
-	}
-
-	/* Centralize the person creation, differing only person's type */
-	private ResponseEntity<?> register(PersonForm form, TypeEnum typeEnum, UriComponentsBuilder uriBuilder) {
-		Optional<Person> personDb = personService.findById(form.getId());
+		Optional<Candidate> personDb = candidateService.findById(form.getId());
 		if (!personDb.isPresent()) {
 
-			Person person = new Person(form.getId(), form.getName(), typeEnum, LocalDateTime.now(), Status.ACTIVE);
-			personService.save(person);
+			Candidate person = new Candidate(form.getId(), form.getName(), LocalDateTime.now(), form.getSlotDate(), form.getInitTime(), form.getEndTime(), Status.ACTIVE);
+			candidateService.save(person);
 
-			URI uri = uriBuilder.path("interview/interviewer/{id}").buildAndExpand(person.getId()).toUri();
+			URI uri = uriBuilder.path("interview/candidate/{id}").buildAndExpand(person.getId()).toUri();
 
 			return ResponseEntity.created(uri).body(new PersonDto(person));
 		}

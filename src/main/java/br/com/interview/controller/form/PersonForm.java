@@ -1,7 +1,19 @@
 package br.com.interview.controller.form;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class PersonForm {
 
 	@NotNull
@@ -10,31 +22,13 @@ public class PersonForm {
 	@NotNull
 	private String name;
 
-	
-	public PersonForm() {
-		super();
-	}
+	@JsonFormat(pattern="yyyy-MM-dd")
+	private LocalDate slotDate;
+		
+	@JsonFormat(pattern="HH:mm")
+	private LocalTime initTime;
 
-	public PersonForm(@NotNull Long id, @NotNull String name) {
-		super();
-		this.id = id;
-		this.name = name;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
+	@JsonFormat(pattern="HH:mm")
+	private LocalTime endTime;
 
 }

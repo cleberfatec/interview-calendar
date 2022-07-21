@@ -1,15 +1,21 @@
 package br.com.interview;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -21,12 +27,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.com.interview.controller.InterviewController;
 import br.com.interview.controller.form.PersonForm;
-import br.com.interview.controller.form.SlotForm;
-import br.com.interview.model.Person;
+import br.com.interview.model.Candidate;
+import br.com.interview.model.Interviewer;
 import br.com.interview.model.Status;
-import br.com.interview.model.TypeEnum;
-import br.com.interview.repository.PersonRepository;
-import br.com.interview.repository.SlotRepository;
+import br.com.interview.service.CandidateService;
+import br.com.interview.service.InterviewerService;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(InterviewController.class)
@@ -36,94 +41,86 @@ public class InterviewApplicationTests {
 	private MockMvc mvc;
 
 	@MockBean
-	private PersonRepository repository;
+	private CandidateService candidateService;
 	
 	@MockBean
-	private SlotRepository scheduleRepository;
+	private InterviewerService interviewerService;
+
 
 	@Test
-	public void registerSlot_success() {
-		String slotJson = "{\n" + 
-				"	\"personId\": 1,\n" + 
-				"	\"initTime\": \"13:00\",\n" + 
-				"	\"endTime\": \"14:00\",\n" + 
-				"	\"slotDate\": \"2022-07-23\",\n" + 
-				"	\"repeat\": false,\n" + 
-				"	\"repeatEveryday\" : false,\n" + 
-				"	\"repeatEveryweek\" : false\n" + 
-				"}\n" + 
-				"";
-		Optional<Person> person = Optional.of(new Person(1L, "test", TypeEnum.INTERVIEWER, LocalDateTime.now() , Status.ACTIVE));
+	public void getPossibleInterviews() {
 
-        Mockito.when(repository.findById(Mockito.any(Long.class))).thenReturn(person);
+		Optional<Candidate> candidate1 = Optional.of(new Candidate(1L, "candidate", LocalDateTime.now(), LocalDate.now(), LocalTime.of(11, 00), LocalTime.of(12, 00) , Status.ACTIVE));
+		Optional<Candidate> candidate2 = Optional.of(new Candidate(1L, "candidate", LocalDateTime.now(), LocalDate.now(), LocalTime.of(10, 00), LocalTime.of(11, 00) , Status.ACTIVE));
+		
+		Optional<Interviewer> interviewer = Optional.of(new Interviewer(1L, "interviewer", LocalDateTime.now(), LocalDate.now(), LocalTime.of(9, 00), LocalTime.of(10, 00) , Status.ACTIVE));
+
+		
+		List<Candidate> listCandidate = new ArrayList<>();
+		listCandidate.add(candidate1.get());
+		listCandidate.add(candidate2.get());
+		
+		List<Interviewer> listInterview = new ArrayList<>();
+		listInterview.add(interviewer.get());		
+        
+		when(candidateService.findAll()).thenReturn(listCandidate);        
+        when(interviewerService.findAll()).thenReturn(listInterview);
         
 		try {
-			mvc.perform(post("/interview/slot")
-					.contentType(MediaType.APPLICATION_JSON)
-					.content(slotJson)
+			mvc.perform(get("/interview")
+					.contentType(MediaType.APPLICATION_JSON)					
 					.accept(MediaType.APPLICATION_JSON))
-					.andExpect(status().isCreated())
+					.andExpect(status().isOk())
 					.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));		
 											
 		} catch (Exception e) {
-
 			e.printStackTrace();
 		}
 	}
+
 	
 	@Test
-	public void registerSlot_unprocess() {
-		SlotForm slotForm = new SlotForm();
-		Optional<Person> person = Optional.empty();
+	public void registerInterviewer_success() {
+		PersonForm personForm = new PersonForm(3000L, "interviewer", LocalDate.now(), LocalTime.now(), LocalTime.now());
+		Optional<Interviewer> person = Optional.empty();
 
-        Mockito.when(repository.findById(Mockito.any(Long.class))).thenReturn(person);
-        
+        when(interviewerService.findById(any(Long.class))).thenReturn(person);                        
+
 		try {
-			mvc.perform(post("/interview/slot")
+			mvc.perform(post("/interview/".concat("interviewer"))
 					.contentType(MediaType.APPLICATION_JSON)
-					.content(asJsonString(slotForm))
+					.content(asJsonString(personForm))
 					.accept(MediaType.APPLICATION_JSON))
-					.andExpect(status().isUnprocessableEntity())
-					.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));		
-					
-					
+					.andExpect(status().isBadRequest());
 			;
 		} catch (Exception e) {
 
 			e.printStackTrace();
 		}
-	}
-	
-	@Test
-	public void registerInterviewer_success() {
-		registerPerson("interviewer");
+		
 	}
 
 	
 	@Test
 	public void registeCandidate_success() {
-		registerPerson("candidate");
-	}
-	
-	private void registerPerson(String personParam) {
-		PersonForm personForm = new PersonForm(3000L, "test");
-		Optional<Person> person = Optional.empty();
-
-        Mockito.when(repository.findById(Mockito.any(Long.class))).thenReturn(person);
+		PersonForm personForm = new PersonForm(3000L, "candidate", LocalDate.now(), LocalTime.now(), LocalTime.now());
+		Optional<Candidate> person = Optional.empty();
+        
+        when(candidateService.findById(any(Long.class))).thenReturn(person);                        
         
 		try {
-			mvc.perform(post("/interview/".concat(personParam))
+			mvc.perform(post("/interview/".concat("candidate"))
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(asJsonString(personForm))
 					.accept(MediaType.APPLICATION_JSON))
-					.andExpect(status().isCreated())
-					.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
-			;
+					.andExpect(status().isBadRequest());
 		} catch (Exception e) {
 
 			e.printStackTrace();
 		}
+		
 	}
+	
 
     public static String asJsonString(final Object obj) {
         try {
